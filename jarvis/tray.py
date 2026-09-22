@@ -51,3 +51,48 @@ def is_autostart_enabled() -> bool:
         return False
     finally:
         winreg.CloseKey(key)
+
+
+def create_tray_icon(window, *, is_muted, toggle_mute) -> pystray.Icon:
+    """Build the system tray icon and menu, start it in a background thread.
+
+    window: the pywebview Window instance to show/destroy from the menu.
+    is_muted: callable() -> bool, reflects current mute state.
+    toggle_mute: callable() -> None, toggles mute state.
+
+    Returns the running pystray.Icon.
+    """
+    image = Image.open(_ASSETS_DIR / "tray_icon.png")
+
+    def _open_window(icon, item):
+        window.show()
+
+    def _toggle_stop(icon, item):
+        toggle_mute()
+
+    def _toggle_autostart(icon, item):
+        try:
+            if is_autostart_enabled():
+                disable_autostart()
+            else:
+                enable_autostart()
+        except OSError as e:
+            print(f"[Jarvis] Could not update autostart registry entry: {e}")
+
+    def _exit_app(icon, item):
+        icon.stop()
+        window.destroy()
+
+    menu = pystray.Menu(
+        pystray.MenuItem("Open Jarvis", _open_window, default=True),
+        pystray.MenuItem("Stop", _toggle_stop, checked=lambda item: is_muted()),
+        pystray.MenuItem(
+            "Start with Windows", _toggle_autostart,
+            checked=lambda item: is_autostart_enabled(),
+        ),
+        pystray.MenuItem("Exit", _exit_app),
+    )
+
+    icon = pystray.Icon("jarvis", image, "Jarvis", menu)
+    threading.Thread(target=icon.run, daemon=True).start()
+    return icon
