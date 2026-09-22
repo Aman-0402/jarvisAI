@@ -51,7 +51,7 @@ Web UI opens at `http://localhost:7860`. Add providers in the **Config** tab.
 | `jarvis/tray.py` | System tray icon, menu, Windows autostart registry helpers |
 | `config.yaml` | All config — providers, TTS, STT, wake word, tools |
 | `requirements.txt` | Dependencies |
-| `tests/` | 32 tests |
+| `tests/` | 41 tests |
 
 ## Architecture
 

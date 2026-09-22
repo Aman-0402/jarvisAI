@@ -457,7 +457,11 @@ def main() -> None:
         listen_for_wake_word(handle_wake)
         return
 
+    _exiting = threading.Event()
+
     def _on_closing():
+        if _exiting.is_set():
+            return True  # allow the close — this is a real exit, not hide-to-tray
         window.hide()
         return False  # cancel the real close — keep running in tray
 
@@ -470,11 +474,21 @@ def main() -> None:
     threading.Thread(target=_wake_loop, daemon=True).start()
 
     try:
-        tray.create_tray_icon(window, is_muted=is_muted, toggle_mute=toggle_mute)
+        tray.create_tray_icon(window, is_muted=is_muted, toggle_mute=toggle_mute, exiting_event=_exiting)
     except Exception as e:
         print(f"[Jarvis] Tray icon unavailable ({e}) — continuing without it.")
 
-    webview.start()
+    try:
+        webview.start()
+    except Exception as e:
+        # pywebview's GUI backend (WebView2/pythonnet) failed to actually
+        # initialize — this only surfaces here, not at create_window() time.
+        # The wake-word thread and web server are already running and stay
+        # running; we just can't show a native window. Nothing more to do
+        # here — the process stays alive via the daemon threads, voice still
+        # works, just no window/tray. Log clearly so it's not a silent black box.
+        print(f"[Jarvis] Native window backend failed to start ({e}). "
+              f"Continuing voice-only — web UI still reachable at http://localhost:7860")
 
 
 if __name__ == "__main__":

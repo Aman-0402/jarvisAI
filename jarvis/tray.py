@@ -53,12 +53,14 @@ def is_autostart_enabled() -> bool:
         winreg.CloseKey(key)
 
 
-def create_tray_icon(window, *, is_muted, toggle_mute) -> pystray.Icon:
+def create_tray_icon(window, *, is_muted, toggle_mute, exiting_event) -> pystray.Icon:
     """Build the system tray icon and menu, start it in a background thread.
 
     window: the pywebview Window instance to show/destroy from the menu.
     is_muted: callable() -> bool, reflects current mute state.
     toggle_mute: callable() -> None, toggles mute state.
+    exiting_event: threading.Event — set() before window.destroy() so the
+        closing handler allows the real close instead of hiding.
 
     Returns the running pystray.Icon.
     """
@@ -80,6 +82,7 @@ def create_tray_icon(window, *, is_muted, toggle_mute) -> pystray.Icon:
             print(f"[Jarvis] Could not update autostart registry entry: {e}")
 
     def _exit_app(icon, item):
+        exiting_event.set()
         icon.stop()
         window.destroy()
 

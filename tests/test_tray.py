@@ -1,6 +1,5 @@
 # jarvis/tests/test_tray.py
-import pytest
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import patch, MagicMock
 
 
 def test_enable_autostart_writes_registry_value():
