@@ -2,7 +2,9 @@
 from pathlib import Path
 import yaml
 
-_CONFIG_PATH = Path(__file__).parent.parent / "config.yaml"
+from jarvis.paths import get_base_dir
+
+_CONFIG_PATH = get_base_dir() / "config.yaml"
 
 
 def _load_config():

@@ -6,7 +6,9 @@ from pathlib import Path
 import chromadb
 from sqlalchemy import create_engine, text
 
-_CONFIG_PATH = Path(__file__).parent.parent / "config.yaml"
+from jarvis.paths import get_base_dir
+
+_CONFIG_PATH = get_base_dir() / "config.yaml"
 
 
 def _resolve_path(raw: str) -> Path:

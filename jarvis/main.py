@@ -19,9 +19,10 @@ from jarvis.tts import speak, speak_streamed, is_speaking, stop_speaking
 from jarvis.context import ContextManager
 from jarvis.memory import Memory
 from jarvis.tools.router import TOOL_SCHEMAS, dispatch
+from jarvis.paths import get_base_dir
 
 _MAX_TOOL_LOOPS = 15
-_CONFIG_PATH = Path(__file__).parent.parent / "config.yaml"
+_CONFIG_PATH = get_base_dir() / "config.yaml"
 
 # Global abort — Esc sets this, stops everything (speech + tool loop + follow-up)
 _abort = threading.Event()
