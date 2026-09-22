@@ -30,6 +30,11 @@ if %errorlevel% neq 0 (
 )
 
 echo.
+if not exist "config.yaml" (
+    echo [i] No config.yaml found, copying default from config.yaml.example...
+    copy /y config.yaml.example config.yaml >nul
+)
+
 echo [1/4] Creating virtual environment...
 "%PYTHON%" -m venv .venv
 if %errorlevel% neq 0 (

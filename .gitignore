@@ -9,6 +9,7 @@ dist/
 .claude/
 ollama/
 ollama-models/
+config.yaml
 
 *.log
 *.wav
