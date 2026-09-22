@@ -8,12 +8,15 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from jarvis.tts import speak_streamed, stop_speaking, is_speaking
 
 _STATIC_DIR = Path(__file__).parent / "static"
+_ASSETS_DIR = Path(__file__).parent / "assets"
 
 app = FastAPI(title="Jarvis")
+app.mount("/assets", StaticFiles(directory=_ASSETS_DIR), name="assets")
 _clients: list[WebSocket] = []
 _loop: asyncio.AbstractEventLoop | None = None
 
