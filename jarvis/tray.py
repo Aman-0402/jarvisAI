@@ -1,5 +1,6 @@
 """System tray icon + Windows autostart for Jarvis."""
 from __future__ import annotations
+import sys
 import threading
 import winreg
 from pathlib import Path
@@ -7,14 +8,23 @@ from pathlib import Path
 import pystray
 from PIL import Image
 
+from jarvis.paths import get_base_dir
+
 _ASSETS_DIR = Path(__file__).parent / "assets"
 _RUN_KEY_PATH = r"Software\Microsoft\Windows\CurrentVersion\Run"
 _APP_NAME = "JarvisAI"
 
 
 def _autostart_command() -> str:
-    """Command written to the registry — launches the silent (no console) starter."""
-    vbs = Path(__file__).parent.parent / "start_silent.vbs"
+    """Command written to the registry — launches Jarvis with no console window.
+
+    Packaged (PyInstaller) build: the exe itself has no console (built
+    --noconsole), so it's launched directly — no vbs wrapper needed.
+    Running from source: falls back to the existing wscript.exe +
+    start_silent.vbs trick (pythonw.exe has no console either)."""
+    if getattr(sys, "frozen", False):
+        return f'"{sys.executable}"'
+    vbs = get_base_dir() / "start_silent.vbs"
     return f'wscript.exe "{vbs}"'
 
 
