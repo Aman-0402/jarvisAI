@@ -430,8 +430,8 @@ def _should_start_keyboard_listener() -> bool:
 
 
 def main() -> None:
-    import webbrowser
     from jarvis.web import start_web_background
+    import jarvis.tray as tray
 
     print("[Jarvis] Starting up...")
     print("[Jarvis] Keys: Esc = stop | F2 = type | INSERT = mute/unmute")
@@ -439,12 +439,42 @@ def main() -> None:
     start_web_background(port=7860)
     print("[Jarvis] Web UI: http://localhost:7860")
 
-    threading.Thread(target=_keyboard_listener, daemon=True).start()
+    if _should_start_keyboard_listener():
+        threading.Thread(target=_keyboard_listener, daemon=True).start()
 
-    webbrowser.open("http://localhost:7860")
+    try:
+        import webview
+        window = webview.create_window(
+            "Jarvis", "http://localhost:7860", width=1200, height=800, hidden=True,
+        )
+    except Exception as e:
+        # pywebview unavailable, or its WebView2 runtime is missing/broken —
+        # fall back to a browser tab rather than crashing.
+        print(f"[Jarvis] Native window unavailable ({e}) — opening in browser instead.")
+        import webbrowser
+        webbrowser.open("http://localhost:7860")
+        _speak_if_unmuted("Good morning. Jarvis online.")
+        listen_for_wake_word(handle_wake)
+        return
 
-    _speak_if_unmuted("Good morning. Jarvis online.")
-    listen_for_wake_word(handle_wake)
+    def _on_closing():
+        window.hide()
+        return False  # cancel the real close — keep running in tray
+
+    window.events.closing += _on_closing
+
+    def _wake_loop():
+        _speak_if_unmuted("Good morning. Jarvis online.")
+        listen_for_wake_word(handle_wake)
+
+    threading.Thread(target=_wake_loop, daemon=True).start()
+
+    try:
+        tray.create_tray_icon(window, is_muted=is_muted, toggle_mute=toggle_mute)
+    except Exception as e:
+        print(f"[Jarvis] Tray icon unavailable ({e}) — continuing without it.")
+
+    webview.start()
 
 
 if __name__ == "__main__":
