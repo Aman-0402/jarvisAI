@@ -48,6 +48,7 @@ Web UI opens at `http://localhost:7860`. Add providers in the **Config** tab.
 | `jarvis/context.py` | Sliding window context manager |
 | `jarvis/memory.py` | SQLite + ChromaDB fact storage |
 | `jarvis/tools/router.py` | 31 tools mapped (including subagent) |
+| `jarvis/tray.py` | System tray icon, menu, Windows autostart registry helpers |
 | `config.yaml` | All config — providers, TTS, STT, wake word, tools |
 | `requirements.txt` | Dependencies |
 | `tests/` | 32 tests |
@@ -57,7 +58,8 @@ Web UI opens at `http://localhost:7860`. Add providers in the **Config** tab.
 ```
 Voice: Wake word → record_until_silence → transcribe → _process_request → speak_streamed
 Web:   WebSocket → _process_request → broadcast to all clients
-Keyboard: F2 → input() → _process_request → speak_streamed
+Keyboard: F2 → input() → _process_request → speak_streamed (console launch only)
+Tray: pywebview window (hidden by default) + pystray icon — Open/Stop/Start with Windows/Exit
 ```
 
 ## 31 Tools

@@ -38,6 +38,7 @@ jarvisAI/
 │   ├── stt.py                 # Speech-to-text (faster-whisper), speech-gated silence detection
 │   ├── tts.py                 # Text-to-speech (Kokoro), polling-based interrupt
 │   ├── web.py                  # FastAPI + WebSocket backend: provider CRUD, settings CRUD, mute API, serves /assets
+│   ├── tray.py                 # System tray icon, menu (Open/Stop/Start with Windows/Exit), autostart
 │   ├── context.py             # Sliding window context manager, auto-summarization
 │   ├── memory.py               # Long-term memory: SQLite + ChromaDB fact extraction/search
 │   ├── llm.py                   # Internal LLM calls (e.g. summarization)
@@ -65,6 +66,7 @@ jarvisAI/
 - **File ops sandboxing**: `read_file`/`write_file`/`list_files` restricted to `tools.allowed_paths` in `config.yaml` (default `~/Documents`, `~/Desktop`). Never widen this without explicit ask.
 - **Memory**: facts persisted to SQLite (`jarvis/data/memory.db`) + ChromaDB (`jarvis/data/chroma`) for semantic recall; top_k configurable.
 - **All local by default** — no data leaves the machine unless a cloud LLM provider is explicitly configured.
+- **Launch mode**: `start.bat`/`python -m jarvis.main` opens a hidden native window (pywebview) + tray icon, not a browser tab. Tray menu: Open Jarvis, Stop (mute), Start with Windows (autostart toggle), Exit (full quit). Autostart is opt-in, off by default.
 
 ## REST API (jarvis/web.py)
 | Method | Path | Description |
