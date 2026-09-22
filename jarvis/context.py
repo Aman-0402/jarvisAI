@@ -1,6 +1,5 @@
 from __future__ import annotations
 from collections import deque
-from pathlib import Path
 import yaml
 
 from jarvis.paths import get_base_dir

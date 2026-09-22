@@ -3,7 +3,6 @@ import sys
 import tempfile
 import os
 import yaml
-from pathlib import Path
 
 from jarvis.paths import get_base_dir
 

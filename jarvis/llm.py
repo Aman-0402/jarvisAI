@@ -1,5 +1,4 @@
 """Lightweight LLM chat function for internal tasks (context summarization, etc.)."""
-from pathlib import Path
 import yaml
 
 from jarvis.paths import get_base_dir

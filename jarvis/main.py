@@ -6,7 +6,6 @@ import time
 import threading
 import msvcrt
 from datetime import datetime
-from pathlib import Path
 import yaml
 import numpy as np
 import sounddevice as sd
