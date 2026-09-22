@@ -19,7 +19,7 @@ hidden_imports = []
 # Libraries with dynamically-loaded backends that PyInstaller's static
 # analysis tends to miss — collect_all pulls in their submodules, data
 # files, and binaries.
-for pkg in ['torch', 'ctranslate2', 'chromadb', 'openwakeword', 'pyaudio', 'pythonnet']:
+for pkg in ['torch', 'ctranslate2', 'chromadb', 'openwakeword', 'pyaudio', 'pythonnet', 'language_tags']:
     try:
         pkg_datas, pkg_binaries, pkg_hiddenimports = collect_all(pkg)
         datas += pkg_datas
