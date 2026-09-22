@@ -451,6 +451,19 @@ def main() -> None:
     start_web_background(port=7860)
     print("[Jarvis] Web UI: http://localhost:7860")
 
+    active = get_active_provider()
+    providers = get_providers()
+    if active == "ollama" or providers.get(active, {}).get("type") == "ollama":
+        base_url = providers.get(active, {}).get("base_url", "http://localhost:11434")
+        if not is_ollama_reachable(base_url):
+            msg = (
+                f"Ollama not detected at {base_url}. Install from "
+                f"https://ollama.com, run 'ollama serve', then "
+                f"'ollama pull <your model>'."
+            )
+            print(f"[Jarvis] {msg}")
+            _broadcast({"type": "status", "message": msg})
+
     if _should_start_keyboard_listener():
         threading.Thread(target=_keyboard_listener, daemon=True).start()
 
