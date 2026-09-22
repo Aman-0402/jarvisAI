@@ -1,6 +1,7 @@
 from __future__ import annotations
 import json
 import re
+import sys
 import time
 import threading
 import msvcrt
@@ -421,9 +422,16 @@ def _handle_typed_command(text: str) -> None:
         _abort.clear()
 
 
+def _should_start_keyboard_listener() -> bool:
+    """True only when a real console is attached (start.bat / interactive).
+    False for the silent autostart launcher (pythonw.exe has no console),
+    where msvcrt calls would just fail on every poll for no benefit."""
+    return sys.stdin is not None and sys.stdin.isatty()
+
+
 def main() -> None:
-    import webbrowser
     from jarvis.web import start_web_background
+    import jarvis.tray as tray
 
     print("[Jarvis] Starting up...")
     print("[Jarvis] Keys: Esc = stop | F2 = type | INSERT = mute/unmute")
@@ -431,12 +439,62 @@ def main() -> None:
     start_web_background(port=7860)
     print("[Jarvis] Web UI: http://localhost:7860")
 
-    threading.Thread(target=_keyboard_listener, daemon=True).start()
+    if _should_start_keyboard_listener():
+        threading.Thread(target=_keyboard_listener, daemon=True).start()
 
-    webbrowser.open("http://localhost:7860")
+    try:
+        import webview
+        window = webview.create_window(
+            "Jarvis", "http://localhost:7860", width=1200, height=800, hidden=True,
+        )
+    except Exception as e:
+        # pywebview unavailable, or its WebView2 runtime is missing/broken —
+        # fall back to a browser tab rather than crashing.
+        print(f"[Jarvis] Native window unavailable ({e}) — opening in browser instead.")
+        import webbrowser
+        webbrowser.open("http://localhost:7860")
+        _speak_if_unmuted("Good morning. Jarvis online.")
+        listen_for_wake_word(handle_wake)
+        return
 
-    _speak_if_unmuted("Good morning. Jarvis online.")
-    listen_for_wake_word(handle_wake)
+    _exiting = threading.Event()
+
+    def _on_closing():
+        if _exiting.is_set():
+            return True  # allow the close — this is a real exit, not hide-to-tray
+        window.hide()
+        return False  # cancel the real close — keep running in tray
+
+    window.events.closing += _on_closing
+
+    def _wake_loop():
+        _speak_if_unmuted("Good morning. Jarvis online.")
+        listen_for_wake_word(handle_wake)
+
+    wake_thread = threading.Thread(target=_wake_loop, daemon=True)
+    wake_thread.start()
+
+    try:
+        tray.create_tray_icon(window, is_muted=is_muted, toggle_mute=toggle_mute, exiting_event=_exiting)
+    except Exception as e:
+        print(f"[Jarvis] Tray icon unavailable ({e}) — continuing without it.")
+
+    try:
+        webview.start()
+    except Exception as e:
+        # pywebview's GUI backend (WebView2/pythonnet) failed to actually
+        # initialize — this only surfaces here, not at create_window() time.
+        # The web server and wake-word threads are daemon threads, which
+        # means they die the instant main() returns — so we must block the
+        # main thread here (not just log and fall through) or the whole
+        # process exits immediately despite the "voice-only" claim below.
+        # wake_thread runs forever (blocking loop in listen_for_wake_word),
+        # so joining it keeps the process alive for as long as voice still
+        # works, with no functional duplication of the wake-word listening
+        # that's already running on that thread.
+        print(f"[Jarvis] Native window backend failed to start ({e}). "
+              f"Continuing voice-only — web UI still reachable at http://localhost:7860")
+        wake_thread.join()
 
 
 if __name__ == "__main__":
