@@ -5,6 +5,8 @@ import sys
 import time
 import threading
 import msvcrt
+import urllib.request
+import urllib.error
 from datetime import datetime
 import yaml
 import numpy as np
@@ -420,6 +422,16 @@ def _handle_typed_command(text: str) -> None:
         print("[Jarvis] Stopped.")
     finally:
         _abort.clear()
+
+
+def is_ollama_reachable(base_url: str, timeout: float = 2.0) -> bool:
+    """Quick reachability check for an Ollama server. Used to give a clear
+    startup message instead of a raw connection error deep in a tool call."""
+    try:
+        with urllib.request.urlopen(base_url, timeout=timeout) as resp:
+            return resp.status < 500
+    except Exception:
+        return False
 
 
 def _should_start_keyboard_listener() -> bool:
