@@ -471,7 +471,8 @@ def main() -> None:
         _speak_if_unmuted("Good morning. Jarvis online.")
         listen_for_wake_word(handle_wake)
 
-    threading.Thread(target=_wake_loop, daemon=True).start()
+    wake_thread = threading.Thread(target=_wake_loop, daemon=True)
+    wake_thread.start()
 
     try:
         tray.create_tray_icon(window, is_muted=is_muted, toggle_mute=toggle_mute, exiting_event=_exiting)
@@ -483,12 +484,17 @@ def main() -> None:
     except Exception as e:
         # pywebview's GUI backend (WebView2/pythonnet) failed to actually
         # initialize — this only surfaces here, not at create_window() time.
-        # The wake-word thread and web server are already running and stay
-        # running; we just can't show a native window. Nothing more to do
-        # here — the process stays alive via the daemon threads, voice still
-        # works, just no window/tray. Log clearly so it's not a silent black box.
+        # The web server and wake-word threads are daemon threads, which
+        # means they die the instant main() returns — so we must block the
+        # main thread here (not just log and fall through) or the whole
+        # process exits immediately despite the "voice-only" claim below.
+        # wake_thread runs forever (blocking loop in listen_for_wake_word),
+        # so joining it keeps the process alive for as long as voice still
+        # works, with no functional duplication of the wake-word listening
+        # that's already running on that thread.
         print(f"[Jarvis] Native window backend failed to start ({e}). "
               f"Continuing voice-only — web UI still reachable at http://localhost:7860")
+        wake_thread.join()
 
 
 if __name__ == "__main__":
