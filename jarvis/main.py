@@ -1,6 +1,7 @@
 from __future__ import annotations
 import json
 import re
+import sys
 import time
 import threading
 import msvcrt
@@ -419,6 +420,13 @@ def _handle_typed_command(text: str) -> None:
         print("[Jarvis] Stopped.")
     finally:
         _abort.clear()
+
+
+def _should_start_keyboard_listener() -> bool:
+    """True only when a real console is attached (start.bat / interactive).
+    False for the silent autostart launcher (pythonw.exe has no console),
+    where msvcrt calls would just fail on every poll for no benefit."""
+    return sys.stdin is not None and sys.stdin.isatty()
 
 
 def main() -> None:
