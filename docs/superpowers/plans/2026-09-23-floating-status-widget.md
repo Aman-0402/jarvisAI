@@ -400,8 +400,7 @@ def create_widget_window(main_window):
         screen_height = ctypes.windll.user32.GetSystemMetrics(1)
         pos = default_widget_position(screen_width, screen_height)
 
-    from jarvis.paths import get_base_dir
-    widget_html_path = get_base_dir() / "jarvis" / "static" / "widget.html"
+    widget_html_path = Path(__file__).parent / "static" / "widget.html"
 
     window = webview.create_window(
         "Jarvis Widget",
@@ -441,7 +440,7 @@ def register_widget_listener(widget_window) -> None:
     register_event_listener(_on_event)
 ```
 
-Note: `widget_html_path` uses `str(get_base_dir() / "jarvis" / "static" / "widget.html")` rather than the package-relative `Path(__file__).parent` pattern the rest of `jarvis/static/` serving uses (see `jarvis/web.py`'s `_STATIC_DIR`) — this is intentional and different from that case: pywebview's `create_window(url=...)` needs a real filesystem path it can load directly (`file://`), whereas `_STATIC_DIR` is read by the FastAPI static-file server, a different consumer with different path needs. Since `jarvis/static/` is bundled as package-internal PyInstaller data (per `AGENTS.md`'s packaging notes, "PyInstaller preserves the package's relative structure in a onedir build"), `get_base_dir()` also resolves correctly here when frozen (exe dir) and from source (repo root) — same reasoning as the rest of `jarvis/paths.py`'s usage, just for a different file type.
+**Correction (caught in final review, after this task originally shipped with `get_base_dir()` here — that was wrong):** `widget_html_path` must use `Path(__file__).parent / "static" / "widget.html"`, the same pattern `jarvis/web.py`'s `_STATIC_DIR` already uses — NOT `get_base_dir()`. `get_base_dir()` resolves to the exe's own directory when frozen, but PyInstaller onedir puts bundled `datas` (`jarvis/static/` included, per `jarvis.spec`) inside `dist/Jarvis/_internal/`, not next to the exe — this is the exact same pitfall `jarvis/paths.py`'s `ensure_config_exists()` and its `_MEIPASS` fallback already had to work around for `config.yaml.example`. `get_base_dir()` is still correct for `widget_position.json` (genuinely exe-adjacent user data, same as `config.yaml`) — only the bundled-asset path was wrong.
 
 - [ ] **Step 2: Wire it into `main.py`**
 

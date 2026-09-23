@@ -88,7 +88,13 @@ def create_widget_window(main_window):
         screen_height = ctypes.windll.user32.GetSystemMetrics(1)
         pos = default_widget_position(screen_width, screen_height)
 
-    widget_html_path = get_base_dir() / "jarvis" / "static" / "widget.html"
+    # get_base_dir() is wrong here: it resolves to the exe's own directory
+    # when frozen, but PyInstaller onedir puts bundled datas (jarvis/static/
+    # included) in _internal/, not next to the exe. Use the same
+    # __file__-relative pattern jarvis/web.py's _STATIC_DIR already uses for
+    # this exact reason — module __file__ resolves correctly against
+    # sys._MEIPASS (_internal/) when frozen.
+    widget_html_path = Path(__file__).parent / "static" / "widget.html"
 
     window = webview.create_window(
         "Jarvis Widget",
