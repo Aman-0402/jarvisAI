@@ -8,6 +8,7 @@
 # build failures. Don't treat this file as final on first read.
 
 from PyInstaller.utils.hooks import collect_all
+from PyInstaller.building.build_main import Splash
 
 datas = [
     ('jarvis/static', 'jarvis/static'),
@@ -20,7 +21,7 @@ hidden_imports = []
 # Libraries with dynamically-loaded backends that PyInstaller's static
 # analysis tends to miss — collect_all pulls in their submodules, data
 # files, and binaries.
-for pkg in ['torch', 'ctranslate2', 'chromadb', 'openwakeword', 'pyaudio', 'pythonnet', 'language_tags', 'espeakng_loader']:
+for pkg in ['torch', 'ctranslate2', 'chromadb', 'openwakeword', 'pyaudio', 'pythonnet', 'language_tags', 'espeakng_loader', 'en_core_web_sm']:
     try:
         pkg_datas, pkg_binaries, pkg_hiddenimports = collect_all(pkg)
         datas += pkg_datas
@@ -44,9 +45,26 @@ a = Analysis(
 
 pyz = PYZ(a.pure)
 
+# Native PyInstaller splash — shows immediately on double-click (before the
+# bundled interpreter even finishes starting), closes via pyi_splash.close()
+# once jarvis/wake.py's listener is actually live. See
+# docs/superpowers/specs/2026-09-23-splash-screen-design.md.
+splash = Splash(
+    'jarvis/assets/splash.png',
+    binaries=a.binaries,
+    datas=a.datas,
+    text_pos=(10, 390),
+    text_size=12,
+    text_color='white',
+    text_default='Starting Jarvis...',
+    always_on_top=True,
+)
+
 exe = EXE(
     pyz,
     a.scripts,
+    splash,
+    splash.binaries,
     [],
     exclude_binaries=True,
     name='Jarvis',
@@ -62,6 +80,7 @@ coll = COLLECT(
     exe,
     a.binaries,
     a.datas,
+    splash.binaries,
     strip=False,
     upx=False,
     name='Jarvis',

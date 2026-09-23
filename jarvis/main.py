@@ -24,6 +24,27 @@ from jarvis.paths import get_base_dir, ensure_config_exists
 
 ensure_config_exists()
 
+
+def _log_thread_crash(args) -> None:
+    """threading.excepthook target. Daemon threads (web server, wake-word
+    loop) die silently on an uncaught exception — normally logged via
+    print() to stderr, but a windowed (console=False) PyInstaller build has
+    no console to print to, so without this the thread just vanishes with
+    no trace. Writes to a file instead, which works regardless of console
+    mode."""
+    try:
+        import traceback
+        log_path = get_base_dir() / "crash.log"
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(f"\n--- {datetime.now()} ---\n")
+            f.write(f"Thread: {args.thread.name if args.thread else '?'}\n")
+            traceback.print_exception(args.exc_type, args.exc_value, args.exc_traceback, file=f)
+    except Exception:
+        pass
+
+
+threading.excepthook = _log_thread_crash
+
 _MAX_TOOL_LOOPS = 15
 _CONFIG_PATH = get_base_dir() / "config.yaml"
 

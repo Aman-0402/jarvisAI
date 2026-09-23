@@ -1,4 +1,5 @@
 from __future__ import annotations
+import sys
 import threading
 import time
 import numpy as np
@@ -61,6 +62,17 @@ def listen_for_wake_word(callback) -> None:
     _ignore_until = [0.0]
 
     print("[Jarvis] Listening for wake word...")
+    if getattr(sys, "frozen", False):
+        # Packaged-exe-only: pyi_splash doesn't exist in a source run. This
+        # is the first point voice is genuinely ready (TTS already
+        # succeeded for the startup greeting earlier in this same thread,
+        # and the wake-word model + mic are now live) — close the startup
+        # splash here rather than earlier at window/tray creation.
+        try:
+            import pyi_splash
+            pyi_splash.close()
+        except Exception:
+            pass
     try:
         while True:
             # ── Mic pause: STT is recording, yield the hardware ──
