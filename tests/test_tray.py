@@ -80,3 +80,27 @@ def test_is_autostart_enabled_false_when_value_missing():
 
         from jarvis.tray import is_autostart_enabled
         assert is_autostart_enabled() is False
+
+
+def test_autostart_command_frozen_launches_exe_directly():
+    """When frozen (PyInstaller), autostart should launch the exe directly,
+    no vbs wrapper."""
+    import jarvis.tray as tray_mod
+    from unittest.mock import patch
+    with patch.object(tray_mod.sys, "frozen", True, create=True), \
+         patch.object(tray_mod.sys, "executable", r"C:\Apps\Jarvis\Jarvis.exe"):
+        from jarvis.tray import _autostart_command
+        result = _autostart_command()
+        assert result == r'"C:\Apps\Jarvis\Jarvis.exe"'
+
+
+def test_autostart_command_not_frozen_uses_vbs_wrapper():
+    """When not frozen (source run), autostart should use the
+    wscript.exe + start_silent.vbs wrapper."""
+    import jarvis.tray as tray_mod
+    from unittest.mock import patch
+    with patch.object(tray_mod.sys, "frozen", False, create=True):
+        from jarvis.tray import _autostart_command
+        result = _autostart_command()
+        assert result.startswith("wscript.exe ")
+        assert "start_silent.vbs" in result

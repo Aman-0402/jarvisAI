@@ -20,7 +20,9 @@ from jarvis.tts import speak, speak_streamed, is_speaking, stop_speaking
 from jarvis.context import ContextManager
 from jarvis.memory import Memory
 from jarvis.tools.router import TOOL_SCHEMAS, dispatch
-from jarvis.paths import get_base_dir
+from jarvis.paths import get_base_dir, ensure_config_exists
+
+ensure_config_exists()
 
 _MAX_TOOL_LOOPS = 15
 _CONFIG_PATH = get_base_dir() / "config.yaml"

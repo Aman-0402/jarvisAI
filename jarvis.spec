@@ -12,6 +12,7 @@ from PyInstaller.utils.hooks import collect_all
 datas = [
     ('jarvis/static', 'jarvis/static'),
     ('jarvis/assets', 'jarvis/assets'),
+    ('config.yaml.example', '.'),
 ]
 binaries = []
 hidden_imports = []

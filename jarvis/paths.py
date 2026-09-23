@@ -14,3 +14,16 @@ def get_base_dir() -> Path:
     if getattr(sys, "frozen", False):
         return Path(sys.executable).parent
     return Path(__file__).parent.parent
+
+
+def ensure_config_exists() -> None:
+    """Copy config.yaml.example -> config.yaml next to the exe/repo root if
+    config.yaml doesn't exist yet. Source installs get this from install.bat;
+    the packaged exe has no equivalent step, so this covers a truly fresh
+    machine with nothing placed next to Jarvis.exe yet."""
+    import shutil
+    base = get_base_dir()
+    config_path = base / "config.yaml"
+    example_path = base / "config.yaml.example"
+    if not config_path.exists() and example_path.exists():
+        shutil.copy(example_path, config_path)

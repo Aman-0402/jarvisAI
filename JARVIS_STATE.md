@@ -52,7 +52,7 @@ Web UI opens at `http://localhost:7860`. Add providers in the **Config** tab.
 | `jarvis/paths.py` | Frozen-aware base-path resolution (exe dir when packaged, repo root from source) |
 | `config.yaml` | All config — providers, TTS, STT, wake word, tools |
 | `requirements.txt` | Dependencies |
-| `tests/` | 41 tests |
+| `tests/` | 49 tests |
 
 ## Architecture
 
