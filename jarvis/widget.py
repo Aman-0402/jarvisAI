@@ -56,3 +56,76 @@ def save_widget_position(x: int, y: int) -> None:
     path = _position_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps({"x": x, "y": y}))
+
+
+import ctypes
+
+
+class _WidgetApi:
+    """Exposed to the widget's JS via js_api — methods callable as
+    `window.pywebview.api.<name>(...)` from widget.html."""
+
+    def __init__(self, main_window):
+        self._main_window = main_window
+
+    def save_position(self, x, y) -> None:
+        save_widget_position(int(x), int(y))
+
+    def open_main(self) -> None:
+        self._main_window.show()
+
+
+def create_widget_window(main_window):
+    """Creates the floating status widget window. Call before
+    webview.start() — pywebview requires all windows to exist before the
+    GUI event loop starts. Returns the widget's Window object, or None if
+    window creation failed (non-critical — caller should catch and
+    continue without the widget, same pattern as the main window's own
+    webview.create_window() try/except)."""
+    import webview
+
+    pos = load_widget_position()
+    if pos is None:
+        screen_width = ctypes.windll.user32.GetSystemMetrics(0)
+        screen_height = ctypes.windll.user32.GetSystemMetrics(1)
+        pos = default_widget_position(screen_width, screen_height)
+
+    from jarvis.paths import get_base_dir
+    widget_html_path = get_base_dir() / "jarvis" / "static" / "widget.html"
+
+    window = webview.create_window(
+        "Jarvis Widget",
+        str(widget_html_path),
+        js_api=_WidgetApi(main_window),
+        width=_WIDGET_WIDTH,
+        height=_WIDGET_HEIGHT,
+        x=pos[0],
+        y=pos[1],
+        frameless=True,
+        easy_drag=True,
+        on_top=True,
+        transparent=True,
+        resizable=False,
+        shadow=False,
+    )
+    return window
+
+
+def register_widget_listener(widget_window) -> None:
+    """Wires the widget to the app's existing in-process broadcast hook
+    (register_event_listener, same mechanism jarvis/web.py uses for the
+    WebSocket HUD) so it updates live without any new plumbing."""
+    from jarvis.main import register_event_listener
+
+    def _on_event(event: dict) -> None:
+        if event.get("type") != "status":
+            return
+        state = status_to_state(event.get("message", ""))
+        if state is None:
+            return
+        try:
+            widget_window.evaluate_js(f"setState('{state}')")
+        except Exception:
+            pass  # widget window may have been closed
+
+    register_event_listener(_on_event)

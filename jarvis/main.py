@@ -505,10 +505,23 @@ def main() -> None:
         listen_for_wake_word(handle_wake)
         return
 
+    widget_window = None
+    try:
+        from jarvis.widget import create_widget_window, register_widget_listener
+        widget_window = create_widget_window(window)
+        register_widget_listener(widget_window)
+    except Exception as e:
+        print(f"[Jarvis] Floating widget unavailable ({e}) — continuing without it.")
+
     _exiting = threading.Event()
 
     def _on_closing():
         if _exiting.is_set():
+            if widget_window is not None:
+                try:
+                    widget_window.destroy()
+                except Exception:
+                    pass
             return True  # allow the close — this is a real exit, not hide-to-tray
         window.hide()
         return False  # cancel the real close — keep running in tray
