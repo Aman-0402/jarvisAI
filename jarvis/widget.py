@@ -11,6 +11,29 @@ from jarvis.paths import get_base_dir
 _WIDGET_WIDTH = 120
 _WIDGET_HEIGHT = 120
 
+_STATE_MAP = {
+    "Ready.": "idle",
+    "Wake.": "wake",
+    "Listening...": "listening",
+    "Thinking...": "thinking",
+    "Speaking...": "speaking",
+}
+
+
+def status_to_state(message: str) -> str | None:
+    """Maps a _broadcast() status message to the widget's CSS state class,
+    or None if this message isn't one of the widget's known states (e.g.
+    the Ollama-not-reachable banner) — the widget should ignore it."""
+    return _STATE_MAP.get(message)
+
+
+def default_widget_position(screen_width: int, screen_height: int) -> tuple[int, int]:
+    """Bottom-right corner, with a margin so it clears the taskbar and
+    isn't flush against the screen edge."""
+    x = screen_width - _WIDGET_WIDTH - 20
+    y = screen_height - _WIDGET_HEIGHT - 60
+    return (x, y)
+
 
 def _position_path() -> Path:
     return get_base_dir() / "jarvis" / "data" / "widget_position.json"
