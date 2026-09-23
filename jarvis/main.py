@@ -511,6 +511,12 @@ def main() -> None:
         widget_window = create_widget_window(window)
         register_widget_listener(widget_window)
     except Exception as e:
+        if widget_window is not None:
+            try:
+                widget_window.destroy()
+            except Exception:
+                pass
+            widget_window = None
         print(f"[Jarvis] Floating widget unavailable ({e}) — continuing without it.")
 
     _exiting = threading.Event()

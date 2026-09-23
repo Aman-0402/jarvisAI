@@ -3,6 +3,7 @@ Jarvis's live state (idle/listening/thinking/speaking), draggable, opens
 the main HUD window on click. See
 docs/superpowers/specs/2026-09-23-floating-status-widget-design.md."""
 from __future__ import annotations
+import ctypes
 import json
 from pathlib import Path
 
@@ -58,9 +59,6 @@ def save_widget_position(x: int, y: int) -> None:
     path.write_text(json.dumps({"x": x, "y": y}))
 
 
-import ctypes
-
-
 class _WidgetApi:
     """Exposed to the widget's JS via js_api — methods callable as
     `window.pywebview.api.<name>(...)` from widget.html."""
@@ -90,7 +88,6 @@ def create_widget_window(main_window):
         screen_height = ctypes.windll.user32.GetSystemMetrics(1)
         pos = default_widget_position(screen_width, screen_height)
 
-    from jarvis.paths import get_base_dir
     widget_html_path = get_base_dir() / "jarvis" / "static" / "widget.html"
 
     window = webview.create_window(
