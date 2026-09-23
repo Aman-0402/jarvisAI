@@ -53,20 +53,17 @@ small status indicator, given pywebview already does everything needed
 
 ### State → visuals
 
-Four states, driven by the same status strings `main.py`'s `_broadcast()`
-already sends (used today by the WebSocket/HUD):
+Five states, driven by status strings `main.py`'s `_broadcast()` already
+sends today (used by the WebSocket/HUD) — all already exist in the
+codebase, no new broadcast calls needed:
 
-| Status string    | Visual                                    |
-|-------------------|--------------------------------------------|
-| `"Ready."`         | Dim ring, no animation (idle)             |
-| `"Wake."`           | Bright ring, brief pulse (wake detected)  |
-| `"Listening..."`     | Steady bright glow, slow pulse            |
-| `"Thinking..."` *(new)* | Ring rotates continuously             |
-
-`"Thinking..."` doesn't exist yet — added as a new `_broadcast()` call in
-`jarvis/main.py`'s `_handle_wake_inner()`, right before the LLM call, so
-there's a visible "processing" state between "done listening" and "starting
-to speak" (currently a silent gap).
+| Status string       | Visual                                    |
+|----------------------|--------------------------------------------|
+| `"Ready."`            | Dim ring, no animation (idle)             |
+| `"Wake."`              | Bright ring, brief pulse (wake detected)  |
+| `"Listening..."`        | Steady bright glow, slow pulse            |
+| `"Thinking..."`          | Ring rotates continuously                 |
+| `"Speaking..."`           | Steady bright glow (same as listening)    |
 
 ### Data flow: in-process listener, not WebSocket
 
