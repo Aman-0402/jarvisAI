@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body {
+    margin: 0; padding: 0; overflow: hidden;
+    background: transparent;
+    width: 120px; height: 120px;
+  }
+  .ring-wrap {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    -webkit-user-select: none; user-select: none;
+  }
+  .ring {
+    width: 70px; height: 70px;
+    border-radius: 50%;
+    border: 3px solid #2a5a7a;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.4s ease;
+  }
+  .ring::before {
+    content: "";
+    position: absolute; inset: -3px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    transition: opacity 0.3s ease;
+    opacity: 0;
+  }
+  .core {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: #0a3a5c;
+    box-shadow: 0 0 6px rgba(79, 216, 255, 0.4);
+    transition: box-shadow 0.4s ease, background 0.4s ease;
+  }
+
+  /* idle: dim, no animation (default state above is already idle-styled) */
+
+  /* wake: brief bright pulse */
+  .ring-wrap.wake .ring { border-color: #4fd8ff; }
+  .ring-wrap.wake .core {
+    background: #1a6fa0;
+    box-shadow: 0 0 16px #4fd8ff;
+    animation: pulse 0.6s ease-in-out 2;
+  }
+
+  /* listening / speaking: steady bright glow, slow pulse */
+  .ring-wrap.listening .ring,
+  .ring-wrap.speaking .ring { border-color: #4fd8ff; }
+  .ring-wrap.listening .core,
+  .ring-wrap.speaking .core {
+    background: #1a6fa0;
+    box-shadow: 0 0 16px #4fd8ff;
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+
+  /* thinking: ring rotates continuously */
+  .ring-wrap.thinking .ring::before {
+    opacity: 1;
+    border-top-color: #4fd8ff;
+    border-right-color: #4fd8ff;
+    animation: spin 1s linear infinite;
+  }
+  .ring-wrap.thinking .core {
+    background: #1a6fa0;
+    box-shadow: 0 0 12px #4fd8ff;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 10px #4fd8ff; }
+    50% { box-shadow: 0 0 22px #4fd8ff; }
+  }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+</style>
+</head>
+<body>
+  <div class="ring-wrap idle" id="ringWrap" onclick="handleClick()">
+    <div class="ring"><div class="core"></div></div>
+  </div>
+
+<script>
+  const ringWrap = document.getElementById('ringWrap');
+  const STATES = ['idle', 'wake', 'listening', 'thinking', 'speaking'];
+
+  function setState(state) {
+    STATES.forEach(s => ringWrap.classList.remove(s));
+    ringWrap.classList.add(state);
+  }
+
+  function handleClick() {
+    if (window.pywebview) {
+      window.pywebview.api.open_main();
+    }
+  }
+
+  // Position isn't reliably observable via a native "window moved" event
+  // across pywebview's backends — poll instead. Only calls into Python
+  // when the position actually changed, so this is cheap.
+  let lastPos = null;
+  setInterval(() => {
+    const pos = window.screenX + ',' + window.screenY;
+    if (pos !== lastPos) {
+      lastPos = pos;
+      if (window.pywebview) {
+        window.pywebview.api.save_position(window.screenX, window.screenY);
+      }
+    }
+  }, 2000);
+</script>
+</body>
+</html>
