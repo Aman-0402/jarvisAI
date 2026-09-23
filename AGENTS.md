@@ -23,6 +23,7 @@ start.bat                          # activates venv, runs python -m jarvis.main
 pytest                             # run tests
 ollama serve                       # required if using local Ollama provider
 ollama pull qwen3:8b                # pull default model
+pyinstaller jarvis.spec --clean   # build standalone dist/Jarvis/Jarvis.exe
 ```
 
 ## Project Structure
@@ -67,6 +68,7 @@ jarvisAI/
 - **Memory**: facts persisted to SQLite (`jarvis/data/memory.db`) + ChromaDB (`jarvis/data/chroma`) for semantic recall; top_k configurable.
 - **All local by default** — no data leaves the machine unless a cloud LLM provider is explicitly configured.
 - **Launch mode**: `start.bat`/`python -m jarvis.main` opens a hidden native window (pywebview) + tray icon, not a browser tab. Tray menu: Open Jarvis, Stop (mute), Start with Windows (autostart toggle), Exit (full quit). Autostart is opt-in, off by default.
+- **Packaging**: `pyinstaller jarvis.spec --clean` builds a standalone `dist/Jarvis/Jarvis.exe` (onedir — folder + exe, not a single-file build; torch/ctranslate2 make onefile's per-launch extraction too slow). `jarvis/paths.py`'s `get_base_dir()` makes `config.yaml`/`jarvis/data/` resolve next to the exe when frozen vs. the repo root when running from source — any new module reading `config.yaml` must use `get_base_dir()`, not `Path(__file__).parent`, or it'll break in the packaged build.
 
 ## REST API (jarvis/web.py)
 | Method | Path | Description |

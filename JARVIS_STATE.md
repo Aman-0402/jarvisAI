@@ -49,6 +49,7 @@ Web UI opens at `http://localhost:7860`. Add providers in the **Config** tab.
 | `jarvis/memory.py` | SQLite + ChromaDB fact storage |
 | `jarvis/tools/router.py` | 31 tools mapped (including subagent) |
 | `jarvis/tray.py` | System tray icon, menu, Windows autostart registry helpers |
+| `jarvis/paths.py` | Frozen-aware base-path resolution (exe dir when packaged, repo root from source) |
 | `config.yaml` | All config — providers, TTS, STT, wake word, tools |
 | `requirements.txt` | Dependencies |
 | `tests/` | 41 tests |
@@ -73,6 +74,13 @@ power management, notifications, timers, subagent delegation, and more.
 - **Esc** = abort everything
 - **F2** = type a command in terminal
 - **INSERT** = toggle mute/unmute
+
+## Standalone Build
+
+`pyinstaller jarvis.spec --clean` produces `dist/Jarvis/Jarvis.exe` — no
+Python install required to run it. AI models still download on first run
+(same as the source-run app); Ollama is still a separate install (too
+heavy to bundle).
 
 ## License
 
